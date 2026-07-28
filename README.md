@@ -1,69 +1,122 @@
 # 🐾 Pet Rescue Management System
 
-A full-stack Django web application for reporting, tracking, and managing lost and found pets with user authentication, notifications, profile management, admin dashboard, and responsive UI.
+A full-stack Django web application that helps users report, search, and manage lost and found pets. The system provides secure user authentication, pet reporting, notifications, profile management, and an admin dashboard for approval and monitoring.
 
 ---
 
-## ⚡ Quick Start (Windows PowerShell)
+## ✨ Features
 
-```powershell
-# 1. Enter project folder
-cd petrescue
+- 👤 User Registration & Login
+- 🐶 Report Lost & Found Pets
+- 🔍 Search Pets
+- 📋 User Dashboard
+- 🛠️ Admin Dashboard
+- 🔔 Notifications
+- 👤 Profile Management
+- ✅ Pet Approval System
+- 📱 Responsive UI
 
-# 2. Create & activate virtual environment
-python -m venv venv
-venv\Scripts\Activate.ps1
-# If blocked: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+---
 
-# 3. Install dependencies
+## 🛠️ Tech Stack
+
+- Python
+- Django
+- SQLite
+- HTML5
+- CSS3
+- Bootstrap 5
+- JavaScript
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Home Page
+![Home](screenshots/home.png)
+
+### 🔐 Login Page
+![Login](screenshots/login.png)
+
+### 📝 Registration Page
+![Register](screenshots/register.png)
+
+### 🐾 Report Pet
+![Report Pet](screenshots/report-pet.png)
+
+### 📋 My Reports
+![My Reports](screenshots/my-reports.png)
+
+### 🔔 Notifications
+![Notifications](screenshots/notifications.png)
+
+### 👤 Profile Page
+![Profile](screenshots/profile.png)
+
+### 🛠️ Admin Dashboard
+![Admin Dashboard](screenshots/admin-dashboard.png)
+
+### 📊 Admin Pet Requests
+![Admin Pet Requests](screenshots/admin-pet-requests.png)
+
+---
+
+## 🚀 Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/Sreeshanth26/Pet-Rescue-Management-System.git
+```
+
+Move into the project directory
+
+```bash
+cd Pet-Rescue-Management-System
+```
+
+Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-# 4. Apply migrations
+Apply migrations
+
+```bash
 python manage.py migrate
+```
 
-# 5. Create admin superuser
-python manage.py createsuperuser
+Run the server
 
-# 6. Run server
+```bash
 python manage.py runserver
 ```
 
-Visit **http://127.0.0.1:8000**
+Open your browser and visit:
 
----
-
-## 📋 Pages
-
-| URL | Description | Access |
-|-----|-------------|--------|
-| `/` | Browse accepted listings | Public |
-| `/register/` | Create account | Public |
-| `/login/` | Sign in | Public |
-| `/create/` | Submit pet report | Logged in |
-| `/myrequests/` | View & manage your reports | Logged in |
-| `/edit/<id>/` | Edit pending report | Owner only |
-| `/delete/<id>/` | Delete pending report | Owner only |
-| `/admin-panel/` | Custom admin dashboard | Staff only |
-| `/admin-panel/<id>/status/` | Review & update report | Staff only |
-| `/django-admin/` | Django built-in admin | Superuser |
-
----
-
-## 🔌 REST API
-
-| Method | URL | Description | Auth |
-|--------|-----|-------------|------|
-| GET | `/api/pets/` | List accepted pets | Public |
-| GET | `/api/pets/?type=LOST&q=labrador` | Filter & search | Public |
-| POST | `/api/pets/create/` | Submit new report | Login required |
-| GET | `/api/pets/<pk>/` | Single pet detail | Public |
-| PATCH | `/api/pets/<pk>/status/` | Update status | Staff only |
-
-**PATCH example:**
-```json
-{"status": "ACCEPTED", "admin_note": "Verified and approved."}
+```
+http://127.0.0.1:8000/
 ```
 
 ---
 
+## 📌 Future Enhancements
 
+- 📧 Email Notifications
+- 🤖 AI-based Pet Matching
+- 📍 Google Maps Integration
+- 📱 Mobile Application
+- ☁️ Cloud Deployment
+
+---
+
+## 👨‍💻 Author
+
+**T. Sree Shanth Reddy**
+
+- GitHub: https://github.com/Sreeshanth26
+
+---
+
+⭐ If you like this project, don't forget to star the repository!
