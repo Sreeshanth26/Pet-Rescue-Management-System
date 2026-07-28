@@ -1,6 +1,6 @@
-# 🐾 PetRescue — Milestone 1 & 2 Complete
+# 🐾 Pet Rescue Management System
 
-Django web platform bridging individuals who find lost pets with their owners.
+A full-stack Django web application for reporting, tracking, and managing lost and found pets with user authentication, notifications, profile management, admin dashboard, and responsive UI.
 
 ---
 
