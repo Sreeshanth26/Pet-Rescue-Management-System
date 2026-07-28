@@ -66,17 +66,4 @@ Visit **http://127.0.0.1:8000**
 
 ---
 
-## ✅ Milestone Coverage
 
-**Milestone 1 — User Management**
-- User registration, login, logout
-- Session-based authentication
-- PetRequest model with all required fields
-
-**Milestone 2 — Pet Registration & Admin Management**
-- Users raise Lost/Found requests with full pet details
-- Custom Admin Panel to Accept / Reject reports
-- Admin note displayed to the user
-- Edit & delete own pending reports
-- REST APIs for all operations
-- Search, filter, pagination
