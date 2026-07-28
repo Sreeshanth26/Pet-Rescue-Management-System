@@ -33,31 +33,31 @@ A full-stack Django web application that helps users report, search, and manage 
 ## 📸 Screenshots
 
 ### 🏠 Home Page
-![Home](screenshots/home.png)
+![Home](screenshots/homepage.png)
 
 ### 🔐 Login Page
-![Login](screenshots/login.png)
+![Login](screenshots/loginpage.png)
 
 ### 📝 Registration Page
-![Register](screenshots/register.png)
+![Register](screenshots/registration.png)
 
 ### 🐾 Report Pet
-![Report Pet](screenshots/report-pet.png)
+![Report Pet](screenshots/reportingpage.png)
 
 ### 📋 My Reports
-![My Reports](screenshots/my-reports.png)
+![My Reports](screenshots/userreports.png)
 
 ### 🔔 Notifications
-![Notifications](screenshots/notifications.png)
+![Notifications](screenshots/notificationpage.png)
 
-### 👤 Profile Page
-![Profile](screenshots/profile.png)
+### 👤 System workflow
+![Systemworkflow](screenshots/systemworkflow.png)
 
-### 🛠️ Admin Dashboard
-![Admin Dashboard](screenshots/admin-dashboard.png)
+### 🛠️ Recent listing
+![Recent listings](screenshots/recentlistingspage.png)
 
-### 📊 Admin Pet Requests
-![Admin Pet Requests](screenshots/admin-pet-requests.png)
+### 📊 User home
+![User home](screenshots/userhomepage.png)
 
 ---
 
