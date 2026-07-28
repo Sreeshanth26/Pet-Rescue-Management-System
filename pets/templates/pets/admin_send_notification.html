@@ -1,0 +1,159 @@
+{% extends "pets/base.html" %}
+{% block title %}Send Notification — Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sn-wrap{padding:2.25rem 0 5rem}
+  .sn-grid{display:grid;grid-template-columns:1fr 420px;gap:2rem;align-items:start}
+  .fcard{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:2rem;box-shadow:var(--shadow-md)}
+  .fcard h3{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;margin-bottom:1.3rem;padding-bottom:.7rem;border-bottom:1px solid var(--border)}
+  .fg{margin-bottom:1.15rem}
+  .flbl{display:block;margin-bottom:5px;font-size:.84rem;font-weight:600;color:var(--gray-dark)}
+  .fc{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.92rem;background:var(--warm-white);color:var(--charcoal);outline:none;transition:border-color .2s,box-shadow .2s;appearance:auto}
+  .fc:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,129,10,.1)}
+  textarea.fc{resize:vertical;min-height:95px}
+
+  /* Quick-fill type buttons */
+  .qtype{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1.2rem}
+  .qt{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .2s}
+  .qt:hover{border-color:var(--amber);color:var(--amber)}
+
+  /* Recent log */
+  .rcard{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.5rem;box-shadow:var(--shadow-sm);position:sticky;top:78px}
+  .rcard h3{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+  .rrow{padding:10px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+  .rrow:last-child{border-bottom:none}
+  .rrow-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px}
+  .rtitle{font-weight:600;color:var(--charcoal);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ruser{font-size:.77rem;color:var(--gray-mid)}
+  .rdate{font-size:.74rem;color:var(--gray-light);white-space:nowrap}
+  .rmsg{font-size:.79rem;color:var(--gray-mid);line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  @media(max-width:860px){.sn-grid{grid-template-columns:1fr}.rcard{position:static}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <a href="{% url 'admin_dashboard' %}" style="color:#b0a898;text-decoration:none;font-size:.88rem;display:inline-block;margin-bottom:.7rem">← Back to Dashboard</a>
+    <h1>📨 Send Notification</h1>
+    <p>Send a message or update directly to any user</p>
+  </div>
+</div>
+
+<div class="sn-wrap">
+  <div class="container">
+    <div class="sn-grid">
+
+      <!-- FORM -->
+      <div class="fcard">
+        <h3>Compose Notification</h3>
+
+        <div style="margin-bottom:1.2rem">
+          <div style="font-size:.82rem;font-weight:600;color:var(--gray-mid);margin-bottom:6px">Quick Templates:</div>
+          <div class="qtype">
+            <button type="button" class="qt" onclick="fillTemplate('accepted')">✅ Accepted</button>
+            <button type="button" class="qt" onclick="fillTemplate('rejected')">❌ Rejected</button>
+            <button type="button" class="qt" onclick="fillTemplate('match')">🔍 Match Found</button>
+            <button type="button" class="qt" onclick="fillTemplate('info')">💬 Info / Update</button>
+          </div>
+        </div>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="fg">
+            <label class="flbl">Send To (User) *</label>
+            <select name="user" id="id_user" class="fc" required>
+              <option value="">— Select user —</option>
+              {{ form.user }}
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flbl">Notification Type *</label>
+            <select name="notif_type" id="id_notif_type" class="fc" required>
+              {{ form.notif_type }}
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flbl">Related Report <span style="font-weight:400;color:var(--gray-mid)">(optional)</span></label>
+            <select name="pet" id="id_pet" class="fc">
+              <option value="">— None —</option>
+              {{ form.pet }}
+            </select>
+          </div>
+          <div class="fg">
+            <label class="flbl">Title / Subject *</label>
+            <input type="text" name="title" id="id_title" class="fc" placeholder="e.g. Your report has been reviewed" required>
+          </div>
+          <div class="fg">
+            <label class="flbl">Message *</label>
+            <textarea name="message" id="id_message" class="fc" rows="5" placeholder="Write your message here…" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="font-size:.97rem;padding:13px">
+            📨 Send Notification
+          </button>
+        </form>
+      </div>
+
+      <!-- RECENT LOG -->
+      <div class="rcard">
+        <h3>📋 Recently Sent (20)</h3>
+        {% if recent %}
+          {% for n in recent %}
+          <div class="rrow">
+            <div class="rrow-top">
+              <span class="rtitle">{{ n.title }}</span>
+              <span class="rdate">{{ n.created_at|date:"d M" }}</span>
+            </div>
+            <div class="ruser">👤 {{ n.user.username }} &nbsp;·&nbsp;
+              <span style="color:{% if n.notif_type == 'ACCEPTED' %}#166534{% elif n.notif_type == 'REJECTED' %}#991b1b{% elif n.notif_type == 'MATCH' %}#1e40af{% else %}#92400e{% endif %}">
+                {{ n.get_notif_type_display }}
+              </span>
+            </div>
+            <div class="rmsg">{{ n.message|truncatechars:80 }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p style="color:var(--gray-mid);font-size:.87rem;text-align:center;padding:1.5rem 0">No notifications sent yet.</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const templates = {
+    accepted: {
+      type: 'ACCEPTED',
+      title: 'Your report has been accepted!',
+      msg: 'Great news! Your pet report has been reviewed and accepted by our admin team. It is now visible publicly on PetRescue.\n\nThank you for helping the community!'
+    },
+    rejected: {
+      type: 'REJECTED',
+      title: 'Your report could not be approved',
+      msg: 'Unfortunately your pet report could not be approved at this time. This may be due to incomplete information or a duplicate entry.\n\nPlease edit and resubmit with more details, or contact us if you have questions.'
+    },
+    match: {
+      type: 'MATCH',
+      title: 'Possible match found for your pet!',
+      msg: 'We found a report that may match your lost or found pet. Please visit the search page and review the listing.\n\nContact the reporter directly using the number on the listing.'
+    },
+    info: {
+      type: 'MESSAGE',
+      title: 'Update regarding your report',
+      msg: 'We wanted to reach out regarding your pet report on PetRescue. Please review your report and get in touch if you have any questions.'
+    }
+  };
+
+  function fillTemplate(key) {
+    const t = templates[key];
+    document.getElementById('id_title').value = t.title;
+    document.getElementById('id_message').value = t.msg;
+    // set select
+    const sel = document.getElementById('id_notif_type');
+    for (let o of sel.options) { if (o.value === t.type) { o.selected = true; break; } }
+  }
+</script>
+{% endblock %}

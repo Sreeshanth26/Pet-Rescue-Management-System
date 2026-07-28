@@ -1,0 +1,179 @@
+{% extends "pets/base.html" %}
+{% block title %}{% if edit_mode %}Edit Report{% else %}Report a Pet{% endif %} — PetRescue{% endblock %}
+
+{% block extra_head %}
+<style>
+  .create-wrap{padding:2.5rem 0 4rem}
+  .create-grid{display:grid;grid-template-columns:1fr 360px;gap:2rem;align-items:start}
+  .form-section-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--charcoal);margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:2px solid var(--amber);display:inline-block}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .tip-card{background:var(--card-bg);border-radius:16px;padding:1.5rem;border:1px solid var(--border);box-shadow:var(--shadow-sm);position:sticky;top:88px}
+  .tip-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;margin-bottom:1rem;color:var(--charcoal)}
+  .tip-item{display:flex;gap:10px;margin-bottom:14px;font-size:0.88rem;color:var(--gray-dark);line-height:1.5}
+  .tip-icon{font-size:1.1rem;flex-shrink:0;margin-top:2px}
+  .type-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.4rem}
+  .type-option{position:relative}
+  .type-option input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+  .type-option label{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px;border:2px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;font-weight:600;font-size:0.92rem;color:var(--gray-mid);background:var(--warm-white)}
+  .type-option label:hover{border-color:var(--gray-light)}
+  .type-option label .type-emoji{font-size:1.8rem}
+  .type-option input[type=radio]:checked + label{border-color:var(--amber);background:rgba(232,129,10,0.06);color:var(--amber)}
+  .type-option.lost-type input[type=radio]:checked + label{border-color:var(--lost-red);background:rgba(214,69,69,0.06);color:var(--lost-red)}
+  .type-option.found-type input[type=radio]:checked + label{border-color:var(--found-green);background:rgba(46,139,87,0.06);color:var(--found-green)}
+  .file-upload{border:2px dashed var(--border);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;background:var(--warm-white);transition:all 0.2s}
+  .file-upload:hover{border-color:var(--amber);background:rgba(232,129,10,0.04)}
+  .file-upload input[type=file]{position:absolute;opacity:0;pointer-events:none}
+  .file-upload-text{font-size:0.88rem;color:var(--gray-mid)}
+  .file-upload-icon{font-size:2rem;margin-bottom:0.5rem}
+  @media(max-width:900px){.create-grid{grid-template-columns:1fr}.tip-card{position:static}}
+  @media(max-width:480px){.two-col{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>{% if edit_mode %}✏️ Edit Report{% else %}📋 Report a Pet{% endif %}</h1>
+    <p>Help reunite a lost or found pet with their family</p>
+  </div>
+</div>
+
+<div class="create-wrap">
+  <div class="container">
+    <div class="create-grid">
+
+      <!-- FORM -->
+      <div class="form-card">
+        <form method="POST" enctype="multipart/form-data" action="{% url 'create_request' %}">
+          {% csrf_token %}
+
+          <!-- Request Type -->
+          <div style="margin-bottom:1.5rem">
+            <div class="form-section-title">Report Type</div>
+            <div class="type-selector" style="margin-top:1rem">
+              <div class="type-option lost-type">
+                <input type="radio" name="request_type" id="type_lost" value="LOST">
+                <label for="type_lost">
+                  <span class="type-emoji">😢</span>
+                  I Lost My Pet
+                </label>
+              </div>
+              <div class="type-option found-type">
+                <input type="radio" name="request_type" id="type_found" value="FOUND">
+                <label for="type_found">
+                  <span class="type-emoji">🤗</span>
+                  I Found a Pet
+                </label>
+              </div>
+            </div>
+            {% if form.request_type.errors %}<ul class="errorlist">{% for e in form.request_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- Pet Details -->
+          <div style="margin-bottom:1.4rem">
+            <div class="form-section-title">Pet Information</div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label class="form-label">Pet Name</label>
+              <input type="text" name="pet_name" class="form-control" placeholder="e.g. Buddy, Whiskers" required/>
+              {% if form.pet_name.errors %}<ul class="errorlist">{% for e in form.pet_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pet Type</label>
+              <input type="text" name="pet_type" class="form-control" placeholder="Dog, Cat, Bird…" required/>
+              {% if form.pet_type.errors %}<ul class="errorlist">{% for e in form.pet_type.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="form-group">
+              <label class="form-label">Breed</label>
+              <input type="text" name="breed" class="form-control" placeholder="e.g. Labrador, Persian"/>
+              {% if form.breed.errors %}<ul class="errorlist">{% for e in form.breed.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="form-group">
+              <label class="form-label">Colour</label>
+              <input type="text" name="color" class="form-control" placeholder="e.g. Golden, Black & White" required/>
+              {% if form.color.errors %}<ul class="errorlist">{% for e in form.color.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <!-- Location & Contact -->
+          <div style="margin-bottom:1.4rem;margin-top:0.5rem">
+            <div class="form-section-title">Location & Contact</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Last Known / Found Location</label>
+            <input type="text" name="location" class="form-control" placeholder="e.g. Banjara Hills, Hyderabad" required/>
+            {% if form.location.errors %}<ul class="errorlist">{% for e in form.location.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contact Number</label>
+            <input type="text" name="contact_number" class="form-control" placeholder="+91 98765 43210" required/>
+            {% if form.contact_number.errors %}<ul class="errorlist">{% for e in form.contact_number.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4" placeholder="Distinctive markings, collar details, behaviour, circumstances of loss/finding…" required></textarea>
+            {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- Photo Upload -->
+          <div class="form-group">
+            <label class="form-label">Pet Photo <span style="font-weight:400;color:var(--gray-mid)">(optional but recommended)</span></label>
+            <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+              <div class="file-upload-icon">📷</div>
+              <div class="file-upload-text">Click to upload a photo</div>
+              <div style="font-size:0.78rem;color:var(--gray-light);margin-top:4px">JPG, PNG up to 5MB</div>
+              <input type="file" id="photoInput" name="pet_image" accept="image/*" onchange="showFileName(this)"/>
+            </div>
+            <div id="fileName" style="font-size:0.82rem;color:var(--found-green);margin-top:6px;display:none"></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" style="font-size:1rem;padding:14px;margin-top:0.5rem">
+            {% if edit_mode %}Save Changes ✓{% else %}Submit Report ✓{% endif %}
+          </button>
+
+          <p style="font-size:0.8rem;color:var(--gray-mid);text-align:center;margin-top:10px">
+            {% if edit_mode %}Editing resets the status to Pending for re-review.{% else %}Your report will be visible after admin review.{% endif %}
+          </p>
+        </form>
+      </div>
+
+      <!-- TIPS SIDEBAR -->
+      <div>
+        <div class="tip-card">
+          <h3>💡 Tips for a Better Report</h3>
+          <div class="tip-item"><div class="tip-icon">📸</div><div>Upload a clear, recent photo — it dramatically increases reunion chances.</div></div>
+          <div class="tip-item"><div class="tip-icon">📍</div><div>Be specific about the location — include landmarks or neighbourhood names.</div></div>
+          <div class="tip-item"><div class="tip-icon">🏷️</div><div>Mention collar details, ID tag numbers, or microchip info if available.</div></div>
+          <div class="tip-item"><div class="tip-icon">📞</div><div>Use a phone number where you can be reached quickly.</div></div>
+          <div class="tip-item"><div class="tip-icon">⏱️</div><div>Reports are reviewed by admins within 24 hours before going live.</div></div>
+
+          <div style="background:var(--cream);border-radius:10px;padding:14px;margin-top:1rem;font-size:0.85rem;color:var(--gray-dark);line-height:1.55">
+            <strong>🛡️ Safe Contact</strong><br>
+            Only share a phone number or email you're comfortable making public. Do not share your home address.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function showFileName(input) {
+    const el = document.getElementById('fileName');
+    if(input.files.length) {
+      el.textContent = '✓ ' + input.files[0].name;
+      el.style.display = 'block';
+    }
+  }
+</script>
+{% endblock %}

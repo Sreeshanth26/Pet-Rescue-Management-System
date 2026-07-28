@@ -1,0 +1,188 @@
+{% extends "pets/base.html" %}
+{% block title %}Review: {{ pet.pet_name }} — Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .detail-wrap{padding:2.5rem 0 5rem}
+  .detail-grid{display:grid;grid-template-columns:1fr 380px;gap:2rem;align-items:start}
+  .detail-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+  .detail-img{width:100%;max-height:340px;object-fit:cover;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:6rem}
+  .detail-img img{width:100%;max-height:340px;object-fit:cover}
+  .detail-body{padding:1.75rem}
+  .detail-title{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:800;margin-bottom:1rem}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.25rem}
+  .info-item{background:var(--cream);border-radius:10px;padding:10px 14px}
+  .info-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-mid);margin-bottom:3px}
+  .info-value{font-size:0.92rem;font-weight:600;color:var(--charcoal)}
+  .desc-box{background:var(--cream);border-radius:10px;padding:14px;font-size:0.9rem;color:var(--gray-dark);line-height:1.65}
+
+  /* status panel */
+  .status-panel{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:1.75rem;box-shadow:var(--shadow-sm);position:sticky;top:88px}
+  .status-panel h3{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:1.2rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border)}
+  .current-status{display:flex;align-items:center;justify-content:space-between;background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
+  .sbadge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
+  .sbadge-pending{background:#fef3c7;color:#92400e}
+  .sbadge-accepted{background:#d1fae5;color:#065f46}
+  .sbadge-rejected{background:#fee2e2;color:#b91c1c}
+
+  .radio-group{display:flex;flex-direction:column;gap:8px;margin-bottom:1.25rem}
+  .radio-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all 0.2s}
+  .radio-opt:has(input:checked){border-color:var(--amber);background:rgba(232,129,10,0.04)}
+  .radio-opt.opt-accept:has(input:checked){border-color:var(--found-green);background:rgba(46,139,87,0.05)}
+  .radio-opt.opt-reject:has(input:checked){border-color:var(--lost-red);background:rgba(214,69,69,0.05)}
+  .radio-opt input{width:16px;height:16px;accent-color:var(--amber);flex-shrink:0}
+  .radio-label{font-size:0.9rem;font-weight:600}
+  .radio-sub{font-size:0.78rem;color:var(--gray-mid);margin-top:1px}
+
+  .note-area{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;resize:vertical;min-height:80px;background:var(--warm-white);outline:none;color:var(--charcoal);transition:border-color 0.2s}
+  .note-area:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,129,10,0.1)}
+
+  .submitter-box{background:var(--cream);border-radius:10px;padding:12px 14px;margin-bottom:1.25rem}
+  .submitter-box .s-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;color:var(--gray-mid);margin-bottom:6px}
+  .submitter-box .s-name{font-weight:700;font-size:0.95rem}
+  .submitter-box .s-email{font-size:0.83rem;color:var(--gray-mid)}
+  .submitter-box .s-date{font-size:0.8rem;color:var(--gray-mid);margin-top:4px}
+
+  @media(max-width:900px){.detail-grid{grid-template-columns:1fr}.status-panel{position:static}}
+  @media(max-width:480px){.info-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <div style="margin-bottom:0.75rem">
+      <a href="{% url 'admin_dashboard' %}" style="color:#b0a898;text-decoration:none;font-size:0.9rem">← Back to Dashboard</a>
+    </div>
+    <h1>🔍 Review Report</h1>
+    <p>{{ pet.pet_name }} &mdash; submitted by {{ pet.created_by.username }}</p>
+  </div>
+</div>
+
+<div class="detail-wrap">
+  <div class="container">
+    {% if updated %}<div class="messages-wrap" style="margin:0 0 1.5rem"><div class="alert alert-success">✅ Status updated successfully.</div></div>{% endif %}
+
+    <div class="detail-grid">
+
+      <!-- PET INFO -->
+      <div>
+        <div class="detail-card">
+          <div class="detail-img">
+            {% if pet.pet_image %}
+              <img src="{{ pet.pet_image.url }}" alt="{{ pet.pet_name }}"/>
+            {% else %}
+              {% if pet.pet_type == "Dog" %}🐕{% elif pet.pet_type == "Cat" %}🐈{% elif pet.pet_type == "Bird" %}🦜{% else %}🐾{% endif %}
+            {% endif %}
+          </div>
+          <div class="detail-body">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
+              <span class="sbadge {% if pet.request_type == 'LOST' %}sbadge-rejected{% else %}sbadge-accepted{% endif %}">
+                {{ pet.request_type }}
+              </span>
+              <span class="sbadge sbadge-pending" style="{% if pet.status == 'ACCEPTED' %}background:#d1fae5;color:#065f46{% elif pet.status == 'REJECTED' %}background:#fee2e2;color:#b91c1c{% endif %}">
+                {{ pet.get_status_display }}
+              </span>
+            </div>
+            <div class="detail-title">{{ pet.pet_name }}</div>
+            <div class="info-grid">
+              <div class="info-item"><div class="info-label">Pet Type</div><div class="info-value">{{ pet.pet_type }}</div></div>
+              <div class="info-item"><div class="info-label">Breed</div><div class="info-value">{{ pet.breed|default:"—" }}</div></div>
+              <div class="info-item"><div class="info-label">Colour</div><div class="info-value">{{ pet.color }}</div></div>
+              <div class="info-item"><div class="info-label">Contact</div><div class="info-value">{{ pet.contact_number }}</div></div>
+              <div class="info-item" style="grid-column:1/-1"><div class="info-label">Location</div><div class="info-value">📍 {{ pet.location }}</div></div>
+            </div>
+            {% if pet.description %}
+              <div style="margin-bottom:0.5rem;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-mid)">Description</div>
+              <div class="desc-box">{{ pet.description }}</div>
+            {% endif %}
+            {% if pet.admin_note %}
+              <div style="margin-top:1rem;padding:12px 14px;background:#fffbeb;border-radius:10px;border:1px solid #fde68a;font-size:0.88rem">
+                <strong>📝 Admin Note:</strong> {{ pet.admin_note }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS PANEL -->
+      <div>
+        <div class="status-panel">
+          <h3>📋 Update Status</h3>
+
+          <!-- Submitter info -->
+          <div class="submitter-box">
+            <div class="s-label">Submitted by</div>
+            <div class="s-name">{{ pet.created_by.get_full_name|default:pet.created_by.username }}</div>
+            <div class="s-email">{{ pet.created_by.email }}</div>
+            <div class="s-date">{{ pet.created_at|date:"d M Y, H:i" }}</div>
+          </div>
+
+          <div class="current-status">
+            <span style="font-size:0.82rem;font-weight:600;color:var(--gray-mid)">Current Status</span>
+            <span class="sbadge sbadge-{{ pet.status|lower }}">
+              {% if pet.status == 'PENDING' %}⏳{% elif pet.status == 'ACCEPTED' %}✅{% else %}❌{% endif %}
+              {{ pet.get_status_display }}
+            </span>
+          </div>
+
+          <form method="POST">
+            {% csrf_token %}
+            <div class="radio-group">
+              <label class="radio-opt opt-pending">
+                <input type="radio" name="status" value="PENDING" {% if pet.status == 'PENDING' %}checked{% endif %}>
+                <div>
+                  <div class="radio-label">⏳ Keep Pending</div>
+                  <div class="radio-sub">Awaiting review</div>
+                </div>
+              </label>
+              <label class="radio-opt opt-accept">
+                <input type="radio" name="status" value="ACCEPTED" {% if pet.status == 'ACCEPTED' %}checked{% endif %}>
+                <div>
+                  <div class="radio-label">✅ Accept</div>
+                  <div class="radio-sub">Publish this report publicly</div>
+                </div>
+              </label>
+              <label class="radio-opt opt-reject">
+                <input type="radio" name="status" value="REJECTED" {% if pet.status == 'REJECTED' %}checked{% endif %}>
+                <div>
+                  <div class="radio-label">❌ Reject</div>
+                  <div class="radio-sub">Remove from public listings</div>
+                </div>
+              </label>
+            </div>
+
+            <div style="margin-bottom:1.2rem">
+              <label class="form-label" style="margin-bottom:6px">Admin Note <span style="font-weight:400;color:var(--gray-mid)">(optional)</span></label>
+              <textarea name="admin_note" class="note-area" placeholder="Reason for decision, e.g. 'Incomplete photo' or 'Duplicate post'…">{{ pet.admin_note }}</textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" style="font-size:1rem;padding:13px">
+              Save Decision →
+            </button>
+          </form>
+        </div>
+
+        <!-- API hint -->
+        <div style="margin-top:1rem;padding:14px;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;font-size:0.82rem;color:var(--gray-mid)">
+          <strong style="color:var(--charcoal)">🔌 REST API</strong><br>
+          <code style="background:var(--cream);padding:2px 5px;border-radius:4px;font-size:0.78rem">PATCH /api/pets/{{ pet.pk }}/status/</code><br>
+          Body: <code style="background:var(--cream);padding:2px 5px;border-radius:4px;font-size:0.78rem">{"status":"ACCEPTED"}</code>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show "updated" flash from redirect
+  const params = new URLSearchParams(location.search);
+  if(params.get('updated')) {
+    const el = document.createElement('div');
+    el.className = 'alert alert-success';
+    el.style.cssText = 'margin:1rem 0;max-width:960px;margin-left:auto;margin-right:auto;padding:0 1.5rem';
+    el.innerHTML = '✅ Status updated successfully.';
+  }
+</script>
+{% endblock %}

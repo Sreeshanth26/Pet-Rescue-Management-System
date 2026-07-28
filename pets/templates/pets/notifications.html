@@ -1,0 +1,92 @@
+{% extends "pets/base.html" %}
+{% block title %}My Notifications — PetRescue{% endblock %}
+
+{% block extra_head %}
+<style>
+  .notif-wrap{padding:2.25rem 0 5rem}
+  .notif-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.9rem;margin-bottom:1.65rem}
+  .notif-header h2{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700}
+
+  .ncard{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.15rem 1.4rem;margin-bottom:10px;display:flex;align-items:flex-start;gap:1rem;transition:box-shadow .2s;position:relative}
+  .ncard:hover{box-shadow:var(--shadow-md)}
+  .ncard.unread{border-left:4px solid var(--amber);background:#fffef9}
+  .ncard.unread::before{content:'';position:absolute;top:14px;right:14px;width:9px;height:9px;border-radius:50%;background:var(--amber)}
+
+  .nico{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+  .nico-accepted{background:#dcfce7}
+  .nico-rejected{background:#fee2e2}
+  .nico-match{background:#dbeafe}
+  .nico-message{background:#fef3c7}
+
+  .nbody{flex:1;min-width:0}
+  .ntitle{font-weight:700;font-size:.96rem;margin-bottom:4px;color:var(--charcoal)}
+  .nmsg{font-size:.87rem;color:var(--gray-dark);line-height:1.6;white-space:pre-line}
+  .nmeta{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .ndate{font-size:.77rem;color:var(--gray-mid)}
+  .ntag{font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+  .ntag-accepted{background:#dcfce7;color:#166534}
+  .ntag-rejected{background:#fee2e2;color:#991b1b}
+  .ntag-match{background:#dbeafe;color:#1e40af}
+  .ntag-message{background:#fef3c7;color:#92400e}
+
+  .npet{font-size:.8rem;color:var(--amber);font-weight:600;text-decoration:none}
+  .npet:hover{text-decoration:underline}
+
+  .empty-n{text-align:center;padding:5rem 2rem;color:var(--gray-mid)}
+  .empty-n .ei{font-size:4.5rem;margin-bottom:.75rem}
+  .empty-n h3{font-family:'Playfair Display',serif;font-size:1.45rem;color:var(--gray-dark);margin-bottom:.5rem}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🔔 Notifications</h1>
+    <p>Updates from admins about your pet reports</p>
+  </div>
+</div>
+
+<div class="notif-wrap">
+  <div class="container">
+    <div class="notif-header">
+      <h2>All Notifications</h2>
+      <span style="font-size:.88rem;color:var(--gray-mid)">{{ notifs|length }} total &nbsp;·&nbsp; All marked as read on visit</span>
+    </div>
+
+    {% if notifs %}
+      {% for n in notifs %}
+      <div class="ncard {% if not n.is_read %}unread{% endif %}">
+        <!-- Icon -->
+        <div class="nico nico-{{ n.notif_type|lower }}">
+          {% if n.notif_type == 'ACCEPTED' %}✅
+          {% elif n.notif_type == 'REJECTED' %}❌
+          {% elif n.notif_type == 'MATCH' %}🔍
+          {% else %}💬{% endif %}
+        </div>
+        <!-- Body -->
+        <div class="nbody">
+          <div class="ntitle">{{ n.title }}</div>
+          <div class="nmsg">{{ n.message }}</div>
+          <div class="nmeta">
+            <span class="ntag ntag-{{ n.notif_type|lower }}">{{ n.get_notif_type_display }}</span>
+            <span class="ndate">🗓 {{ n.created_at|date:"d M Y, H:i" }}</span>
+            {% if n.pet %}
+              <a href="{% url 'my_requests' %}" class="npet">🐾 View your reports →</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="empty-n">
+        <div class="ei">🔔</div>
+        <h3>No notifications yet</h3>
+        <p style="margin-bottom:1.5rem">You'll receive notifications here when admins accept or reject your reports, or send you a message.</p>
+        <a href="{% url 'my_requests' %}" class="btn btn-primary">View My Reports</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

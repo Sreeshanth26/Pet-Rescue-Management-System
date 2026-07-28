@@ -1,0 +1,235 @@
+{% extends "pets/base.html" %}
+{% block title %}Admin Dashboard — PetRescue{% endblock %}
+
+{% block extra_head %}
+<style>
+  .adm-wrap{padding:2.5rem 0 5rem}
+  .adm-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem}
+  .adm-topbar h2{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:800}
+
+  /* stat cards */
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+  .stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow 0.2s,transform 0.2s;text-decoration:none;color:inherit}
+  .stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+  .stat-card.active{border-color:var(--amber);box-shadow:0 0 0 2px rgba(232,129,10,0.2)}
+  .stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+  .stat-icon.all{background:#f3f4f6}
+  .stat-icon.pending{background:#fef3c7}
+  .stat-icon.accepted{background:#d1fae5}
+  .stat-icon.rejected{background:#fee2e2}
+  .stat-num{font-family:'Playfair Display',serif;font-size:1.9rem;font-weight:900;line-height:1}
+  .stat-label{font-size:0.78rem;color:var(--gray-mid);font-weight:600;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px}
+
+  /* filter bar */
+  .filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:1.5rem}
+  .filter-row form{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%}
+  .filter-select{padding:7px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--warm-white);color:var(--charcoal);outline:none;cursor:pointer}
+  .filter-select:focus{border-color:var(--amber)}
+  .filter-input{padding:7px 14px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--warm-white);color:var(--charcoal);outline:none;flex:1;min-width:180px}
+  .filter-input:focus{border-color:var(--amber)}
+  .filter-label{font-size:0.82rem;font-weight:600;color:var(--gray-mid);white-space:nowrap}
+
+  /* table */
+  .table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+  table{width:100%;border-collapse:collapse;background:var(--card-bg)}
+  thead tr{background:var(--charcoal);color:#fff}
+  th{padding:13px 16px;text-align:left;font-size:0.78rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;white-space:nowrap}
+  td{padding:13px 16px;font-size:0.88rem;border-top:1px solid var(--border);vertical-align:middle}
+  tbody tr{transition:background 0.15s}
+  tbody tr:hover{background:var(--cream)}
+
+  /* status badge */
+  .sbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
+  .sbadge-pending{background:#fef3c7;color:#92400e}
+  .sbadge-accepted{background:#d1fae5;color:#065f46}
+  .sbadge-rejected{background:#fee2e2;color:#b91c1c}
+
+  /* type badge */
+  .tbadge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:0.73rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em}
+  .tbadge-lost{background:#fee2e2;color:#b91c1c}
+  .tbadge-found{background:#dcfce7;color:#166534}
+
+  /* inline status form */
+  .status-form{display:flex;align-items:center;gap:6px}
+  .status-select{padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82rem;background:var(--warm-white);cursor:pointer;outline:none}
+  .status-select:focus{border-color:var(--amber)}
+  .btn-save{padding:5px 14px;border-radius:8px;background:var(--amber);color:#fff;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;transition:background 0.2s}
+  .btn-save:hover{background:var(--amber-dark)}
+  .btn-detail{padding:5px 12px;border-radius:8px;background:var(--cream);color:var(--gray-dark);font-size:0.82rem;font-weight:600;border:1.5px solid var(--border);text-decoration:none;transition:background 0.2s}
+  .btn-detail:hover{background:var(--border)}
+
+  /* pet thumb */
+  .pet-thumb{width:44px;height:44px;border-radius:8px;object-fit:cover;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:1.4rem;overflow:hidden;flex-shrink:0}
+  .pet-thumb img{width:100%;height:100%;object-fit:cover}
+  .pet-name-cell{display:flex;align-items:center;gap:10px}
+
+  /* pagination */
+  .pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:2rem}
+  .page-link{padding:7px 14px;border-radius:8px;background:var(--card-bg);border:1.5px solid var(--border);font-size:0.85rem;font-weight:500;text-decoration:none;color:var(--gray-dark);transition:all 0.2s}
+  .page-link:hover,.page-link.current{background:var(--amber);color:#fff;border-color:var(--amber)}
+
+  /* empty */
+  .empty-row td{text-align:center;padding:4rem;color:var(--gray-mid);font-size:0.95rem}
+
+  @media(max-width:768px){th:nth-child(5),td:nth-child(5),th:nth-child(6),td:nth-child(6){display:none}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>🛡️ Admin Dashboard</h1>
+    <p>Review and manage all pet reports submitted by users</p>
+  </div>
+</div>
+
+<div class="adm-wrap">
+  <div class="container">
+
+    <!-- STAT CARDS -->
+    <div class="stat-row">
+      <a href="?status=" class="stat-card {% if not status_filter %}active{% endif %}">
+        <div class="stat-icon all">📋</div>
+        <div><div class="stat-num">{{ counts.all }}</div><div class="stat-label">Total</div></div>
+      </a>
+      <a href="?status=PENDING" class="stat-card {% if status_filter == 'PENDING' %}active{% endif %}">
+        <div class="stat-icon pending">⏳</div>
+        <div><div class="stat-num" style="color:#92400e">{{ counts.pending }}</div><div class="stat-label">Pending</div></div>
+      </a>
+      <a href="?status=ACCEPTED" class="stat-card {% if status_filter == 'ACCEPTED' %}active{% endif %}">
+        <div class="stat-icon accepted">✅</div>
+        <div><div class="stat-num" style="color:#065f46">{{ counts.accepted }}</div><div class="stat-label">Accepted</div></div>
+      </a>
+      <a href="?status=REJECTED" class="stat-card {% if status_filter == 'REJECTED' %}active{% endif %}">
+        <div class="stat-icon rejected">❌</div>
+        <div><div class="stat-num" style="color:#b91c1c">{{ counts.rejected }}</div><div class="stat-label">Rejected</div></div>
+      </a>
+    </div>
+
+    <!-- NOTIFY SHORTCUT -->
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+      <a href="{% url 'admin_send_notification' %}" class="btn btn-primary btn-sm" style="gap:6px">📨 Send Notification</a>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-row">
+      <form method="GET">
+        <span class="filter-label">Type:</span>
+        <select name="type" class="filter-select" onchange="this.form.submit()">
+          <option value="" {% if not type_filter %}selected{% endif %}>All Types</option>
+          <option value="LOST"  {% if type_filter == 'LOST'  %}selected{% endif %}>Lost</option>
+          <option value="FOUND" {% if type_filter == 'FOUND' %}selected{% endif %}>Found</option>
+        </select>
+        <input type="hidden" name="status" value="{{ status_filter }}">
+        <input type="text" name="q" class="filter-input" placeholder="🔍  Search pet name, location, username…" value="{{ query }}">
+        <button type="submit" class="btn btn-primary" style="padding:7px 18px;font-size:0.88rem">Search</button>
+        {% if query or type_filter %}<a href="?status={{ status_filter }}" class="btn btn-secondary" style="padding:7px 14px;font-size:0.85rem">Clear</a>{% endif %}
+      </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pet</th>
+            <th>Type</th>
+            <th>Details</th>
+            <th>Submitted By</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pet in page_obj %}
+          <tr>
+            <td>
+              <div class="pet-name-cell">
+                <div class="pet-thumb">
+                  {% if pet.pet_image %}
+                    <img src="{{ pet.pet_image.url }}" alt="{{ pet.pet_name }}"/>
+                  {% else %}
+                    {% if pet.pet_type == "Dog" %}🐕{% elif pet.pet_type == "Cat" %}🐈{% elif pet.pet_type == "Bird" %}🦜{% else %}🐾{% endif %}
+                  {% endif %}
+                </div>
+                <div>
+                  <div style="font-weight:700;color:var(--charcoal)">{{ pet.pet_name }}</div>
+                  <div style="font-size:0.78rem;color:var(--gray-mid)">{{ pet.pet_type }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="tbadge tbadge-{{ pet.request_type|lower }}">{{ pet.request_type }}</span></td>
+            <td>
+              <div style="font-size:0.84rem">
+                <div>🎨 {{ pet.color }}</div>
+                <div>📍 {{ pet.location }}</div>
+                <div>📞 {{ pet.contact_number }}</div>
+              </div>
+            </td>
+            <td>
+              <div style="font-weight:600">{{ pet.created_by.username }}</div>
+              <div style="font-size:0.78rem;color:var(--gray-mid)">{{ pet.created_by.email }}</div>
+            </td>
+            <td style="white-space:nowrap;color:var(--gray-mid);font-size:0.83rem">{{ pet.created_at|date:"d M Y" }}<br>{{ pet.created_at|time:"H:i" }}</td>
+            <td>
+              {% if pet.status == 'PENDING' %}
+                <span class="sbadge sbadge-pending">⏳ Pending</span>
+              {% elif pet.status == 'ACCEPTED' %}
+                <span class="sbadge sbadge-accepted">✅ Accepted</span>
+              {% else %}
+                <span class="sbadge sbadge-rejected">❌ Rejected</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <a href="{% url 'admin_update_status' pet.pk %}" class="btn-detail">View</a>
+                <!-- Quick accept/reject buttons -->
+                {% if pet.status != 'ACCEPTED' %}
+                <form method="POST" action="{% url 'admin_update_status' pet.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="status" value="ACCEPTED">
+                  <input type="hidden" name="admin_note" value="">
+                  <button type="submit" class="btn-save" style="background:var(--found-green)">✓</button>
+                </form>
+                {% endif %}
+                {% if pet.status != 'REJECTED' %}
+                <form method="POST" action="{% url 'admin_update_status' pet.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="status" value="REJECTED">
+                  <input type="hidden" name="admin_note" value="">
+                  <button type="submit" class="btn-save" style="background:var(--lost-red)">✗</button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr class="empty-row"><td colspan="7">🐾 No reports found for the current filters.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINATION -->
+    {% if page_obj.has_other_pages %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&status={{ status_filter }}&type={{ type_filter }}&q={{ query }}" class="page-link">← Prev</a>
+      {% endif %}
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="page-link current">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}&status={{ status_filter }}&type={{ type_filter }}&q={{ query }}" class="page-link">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&status={{ status_filter }}&type={{ type_filter }}&q={{ query }}" class="page-link">Next →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

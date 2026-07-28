@@ -1,0 +1,183 @@
+{% extends "pets/base.html" %}
+{% block title %}Search Lost & Found Pets — PetRescue{% endblock %}
+
+{% block extra_head %}
+<style>
+  .srch-wrap{padding:2.5rem 0 5rem}
+  .srch-hero{background:linear-gradient(135deg,#1c1a18,#2d2a25);padding:3rem 0 2.5rem;position:relative;overflow:hidden}
+  .srch-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(232,129,10,.18),transparent 60%)}
+  .srch-hero .container{position:relative}
+  .srch-hero h1{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:900;color:#fff;margin-bottom:.5rem}
+  .srch-hero p{color:#b0a898;font-size:.97rem;max-width:520px}
+
+  .sform-card{background:var(--card-bg);border:1px solid var(--border);border-radius:18px;padding:2rem;box-shadow:var(--shadow-md);margin-bottom:2.5rem}
+  .sform-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  .sform-wide{grid-column:1/-1}
+  .flbl{display:block;margin-bottom:5px;font-size:.84rem;font-weight:600;color:var(--gray-dark)}
+  .fc{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:.92rem;background:var(--warm-white);color:var(--charcoal);outline:none;transition:border-color .2s,box-shadow .2s;appearance:auto}
+  .fc:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,129,10,.1)}
+
+  .results-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;margin-bottom:1.5rem}
+  .results-header h2{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700}
+  .rcount{font-size:.88rem;color:var(--gray-mid)}
+
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:1.35rem}
+
+  .match-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .25s,box-shadow .25s}
+  .match-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+  .mc-img{width:100%;height:188px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:4rem;overflow:hidden}
+  .mc-img img{width:100%;height:100%;object-fit:cover}
+  .mc-body{padding:1.15rem}
+  .mc-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:6px}
+  .mc-meta{display:flex;flex-wrap:wrap;gap:5px;font-size:.81rem;color:var(--gray-mid);margin-bottom:3px}
+  .mc-desc{font-size:.83rem;color:var(--gray-mid);line-height:1.55;margin-top:7px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .contact-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--cream);border:1px solid var(--border);border-radius:7px;font-size:.8rem;font-weight:500;margin-top:8px}
+
+  .tip-box{background:linear-gradient(135deg,rgba(232,129,10,.07),rgba(232,129,10,.02));border:1px solid rgba(232,129,10,.2);border-radius:14px;padding:1.5rem;margin-bottom:2rem}
+  .tip-box h3{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;margin-bottom:.8rem;color:var(--charcoal)}
+  .tip-row{display:flex;gap:8px;font-size:.85rem;color:var(--gray-dark);line-height:1.5;margin-bottom:7px}
+
+  .empty-srch{text-align:center;padding:4rem 2rem;color:var(--gray-mid)}
+  .empty-srch .ei{font-size:4.5rem;margin-bottom:.75rem}
+  .empty-srch h3{font-family:'Playfair Display',serif;font-size:1.45rem;color:var(--gray-dark);margin-bottom:.5rem}
+
+  @media(max-width:640px){.sform-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="srch-hero">
+  <div class="container">
+    <h1>🔍 Pet Status Inquiry</h1>
+    <p>Search our database to check if your lost pet has been reported found — or find the owner of a pet you discovered.</p>
+  </div>
+</div>
+
+<div class="srch-wrap">
+  <div class="container">
+
+    <!-- TIPS -->
+    <div class="tip-box">
+      <h3>💡 How to Search Effectively</h3>
+      <div class="tip-row"><span>🐾</span><span>Try the pet's name, breed, or colour — e.g. "Golden Labrador" or "black cat with white paws"</span></div>
+      <div class="tip-row"><span>📍</span><span>Enter the area or neighbourhood where the pet was lost or found</span></div>
+      <div class="tip-row"><span>🔄</span><span>If you lost a pet, search <strong>Found</strong> reports — someone may have already reported finding them!</span></div>
+    </div>
+
+    <!-- SEARCH FORM -->
+    <div class="sform-card">
+      <form method="GET" action="{% url 'pet_search' %}">
+        <div class="sform-grid">
+          <div class="sform-wide">
+            <label class="flbl">Keyword (name, breed, colour, description)</label>
+            <input type="text" name="q" class="fc" placeholder="e.g. Buddy, Golden Labrador, black collar…" value="{{ form.q.value|default:'' }}">
+          </div>
+          <div>
+            <label class="flbl">Pet Type</label>
+            <select name="pet_type" class="fc">
+              <option value="">All Types</option>
+              {% for val, lbl in form.fields.pet_type.choices %}
+                {% if val %}<option value="{{ val }}" {% if form.pet_type.value == val %}selected{% endif %}>{{ lbl }}</option>{% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="flbl">Report Type</label>
+            <select name="req_type" class="fc">
+              {% for val, lbl in form.fields.req_type.choices %}
+                <option value="{{ val }}" {% if form.req_type.value == val %}selected{% endif %}>{{ lbl }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="sform-wide">
+            <label class="flbl">Location</label>
+            <input type="text" name="location" class="fc" placeholder="City, area, neighbourhood…" value="{{ form.location.value|default:'' }}">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:1.2rem;flex-wrap:wrap">
+          <button type="submit" class="btn btn-primary" style="padding:11px 28px;font-size:.97rem">🔍 Search</button>
+          <a href="{% url 'pet_search' %}" class="btn btn-secondary" style="padding:11px 20px;font-size:.97rem;background:var(--cream);color:var(--gray-dark);border:1.5px solid var(--border)">Clear</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- RESULTS -->
+    {% if searched %}
+      <div class="results-header">
+        <h2>
+          {% if results %}
+            {{ results|length }} Result{{ results|length|pluralize }} Found
+          {% else %}
+            No Results Found
+          {% endif %}
+        </h2>
+        {% if results %}
+          <span class="rcount">Showing accepted public reports only</span>
+        {% endif %}
+      </div>
+
+      {% if results %}
+        <div class="pgrid">
+          {% for pet in results %}
+          <div class="match-card">
+            <div class="mc-img">
+              {% if pet.pet_image %}<img src="{{ pet.pet_image.url }}" alt="{{ pet.pet_name }}" loading="lazy">
+              {% elif pet.pet_type == "Dog" %}🐕{% elif pet.pet_type == "Cat" %}🐈
+              {% elif pet.pet_type == "Bird" %}🦜{% elif pet.pet_type == "Rabbit" %}🐇{% else %}🐾{% endif %}
+            </div>
+            <div class="mc-body">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
+                <span class="badge badge-{{ pet.request_type|lower }}">{{ pet.request_type }}</span>
+                <span style="font-size:.74rem;color:var(--gray-light)">{{ pet.created_at|date:"d M Y" }}</span>
+              </div>
+              <div class="mc-name">{{ pet.pet_name }}</div>
+              <div class="mc-meta"><span>🐾 {{ pet.pet_type }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</span></div>
+              <div class="mc-meta"><span>🎨 {{ pet.color }}</span></div>
+              <div class="mc-meta"><span>📍 {{ pet.location }}</span></div>
+              {% if pet.description %}<p class="mc-desc">{{ pet.description }}</p>{% endif %}
+              <div class="contact-chip">📞 {{ pet.contact_number }}</div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div style="background:var(--cream);border-radius:12px;padding:1.2rem 1.5rem;margin-top:2rem;font-size:.88rem;color:var(--gray-dark);border:1px solid var(--border)">
+          🐾 <strong>Found a match?</strong> Call the contact number on the card directly.
+          &nbsp;·&nbsp;
+          <strong>No match yet?</strong>
+          {% if user.is_authenticated %}
+            <a href="{% url 'create_request' %}" style="color:var(--amber);font-weight:600">Submit a report →</a>
+          {% else %}
+            <a href="{% url 'register' %}" style="color:var(--amber);font-weight:600">Register and submit a report →</a>
+          {% endif %}
+        </div>
+
+      {% else %}
+        <div class="empty-srch">
+          <div class="ei">🐾</div>
+          <h3>No matching reports found</h3>
+          <p style="margin-bottom:1.5rem;max-width:440px;margin-left:auto;margin-right:auto">
+            No accepted reports match your search. Try different keywords, or submit your own report so others can help.
+          </p>
+          {% if user.is_authenticated %}
+            <a href="{% url 'create_request' %}" class="btn btn-primary">＋ Submit a Report</a>
+          {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary">Register & Submit Report</a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Pre-search state -->
+      <div class="empty-srch">
+        <div class="ei">🔍</div>
+        <h3>Start your search above</h3>
+        <p>Enter any details you know — name, breed, colour, or location — and we'll search all reported pets for you.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "pets/base.html" %}
+{% block title %}PetRescue — Find & Report Lost Pets{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* HERO */
+  .hero{background:linear-gradient(135deg,#1c1a18 0%,#2d2a25 55%,#3a2f1e 100%);min-height:520px;display:flex;align-items:center;position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 65% 50%,rgba(232,129,10,0.2) 0%,transparent 60%)}
+  .hero::after{content:'🐕 🐈 🐇 🦜 🐩';position:absolute;right:6%;bottom:12%;font-size:3.5rem;opacity:0.12;letter-spacing:0.5rem;transform:rotate(-8deg);pointer-events:none}
+  .hero-content{position:relative;max-width:600px}
+  .hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(232,129,10,0.15);border:1px solid rgba(232,129,10,0.3);color:var(--amber-light);padding:6px 14px;border-radius:20px;font-size:0.8rem;font-weight:600;letter-spacing:0.05em;margin-bottom:1.5rem;text-transform:uppercase}
+  .hero h1{font-family:'Playfair Display',serif;font-size:3.4rem;font-weight:900;color:#fff;line-height:1.1;margin-bottom:1.2rem;letter-spacing:-0.02em}
+  .hero h1 em{color:var(--amber);font-style:normal}
+  .hero p{color:#b0a898;font-size:1.1rem;line-height:1.65;margin-bottom:2rem;max-width:480px}
+  .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .btn-hero{padding:14px 28px;font-size:1rem;border-radius:12px}
+
+  /* STATS */
+  .stats-bar{background:var(--card-bg);border-bottom:1px solid var(--border);padding:1.2rem 0}
+  .stats-inner{display:flex;justify-content:center;gap:4rem;flex-wrap:wrap}
+  .stat{text-align:center}
+  .stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--amber)}
+  .stat-label{font-size:0.8rem;color:var(--gray-mid);font-weight:500;text-transform:uppercase;letter-spacing:0.05em}
+
+  /* FILTERS */
+  .filter-bar{background:var(--warm-white);border-bottom:1px solid var(--border);padding:1rem 0}
+  .filter-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .filter-btn{padding:7px 18px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;text-decoration:none;display:inline-block;color:var(--gray-dark);transition:all 0.2s}
+  .filter-btn:hover{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .filter-btn.active-all{background:var(--charcoal);color:#fff;border-color:var(--charcoal)}
+  .filter-btn.active-lost{background:var(--lost-red);border-color:var(--lost-red);color:#fff}
+  .filter-btn.active-found{background:var(--found-green);border-color:var(--found-green);color:#fff}
+  .filter-label{font-size:0.85rem;font-weight:600;color:var(--gray-mid);margin-right:4px}
+  .search-wrap{margin-left:auto;display:flex;gap:8px;align-items:center}
+  .search-input{padding:8px 16px;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--cream);outline:none;width:220px;transition:border-color 0.2s,box-shadow 0.2s}
+  .search-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,129,10,0.1)}
+  .search-btn{padding:8px 18px;border-radius:20px;background:var(--amber);color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;transition:background 0.2s}
+  .search-btn:hover{background:var(--amber-dark)}
+
+  /* GRID */
+  .pets-section{padding:3rem 0}
+  .section-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;margin-bottom:0.4rem}
+  .section-sub{color:var(--gray-mid);font-size:0.95rem;margin-bottom:2rem}
+  .pets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
+
+  .contact-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--cream);border:1px solid var(--border);border-radius:8px;font-size:0.82rem;color:var(--gray-dark);font-weight:500;margin-top:10px}
+
+  /* PAGINATION */
+  .pagination{display:flex;align-items:center;gap:6px;justify-content:center;margin-top:2.5rem}
+  .pg-btn{padding:7px 14px;border-radius:9px;background:var(--card-bg);border:1.5px solid var(--border);font-size:0.84rem;font-weight:500;text-decoration:none;color:var(--gray-dark);transition:all 0.2s}
+  .pg-btn:hover,.pg-btn.current{background:var(--amber);color:#fff;border-color:var(--amber)}
+
+  /* EMPTY STATE */
+  .empty-state{text-align:center;padding:5rem 2rem;color:var(--gray-mid)}
+  .empty-state .emoji{font-size:5rem;margin-bottom:1rem}
+  .empty-state h3{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gray-dark);margin-bottom:0.5rem}
+
+  /* HOW IT WORKS */
+  .hiw{background:var(--charcoal);padding:5rem 0;color:#fff}
+  .hiw-title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;text-align:center;margin-bottom:0.5rem}
+  .hiw-sub{text-align:center;color:#b0a898;margin-bottom:3rem}
+  .hiw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem}
+  .hiw-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem 1.5rem;text-align:center;transition:background 0.2s}
+  .hiw-card:hover{background:rgba(255,255,255,0.08)}
+  .hiw-icon{font-size:2.4rem;margin-bottom:1rem}
+  .hiw-card h4{font-family:'Playfair Display',serif;font-size:1.1rem;margin-bottom:0.5rem;color:#fff}
+  .hiw-card p{font-size:0.88rem;color:#9e9488;line-height:1.6}
+  .hiw-step{display:inline-flex;width:28px;height:28px;background:var(--amber);color:#fff;border-radius:50%;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;margin-bottom:0.8rem}
+
+  @media(max-width:768px){
+    .hero{min-height:400px}
+    .hero h1{font-size:2.2rem}
+    .stats-inner{gap:2rem}
+    .filter-inner{gap:6px}
+    .search-wrap{margin-left:0;width:100%}
+    .search-input{width:100%;flex:1}
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-tag">🐾 &nbsp; India's Pet Reunion Platform</div>
+      <h1>Helping <em>Lost Pets</em><br>Find Their Way Home</h1>
+      <p>Browse found animals, report a missing pet, or let the community help you reunite with your beloved companion.</p>
+      <div class="hero-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'create_request' %}" class="btn btn-primary btn-hero">＋ Report a Pet</a>
+          <a href="{% url 'my_requests' %}" class="btn btn-secondary btn-hero" style="background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(255,255,255,0.15)">My Reports</a>
+        {% else %}
+          <a href="{% url 'register' %}" class="btn btn-primary btn-hero">Get Started Free</a>
+          <a href="{% url 'login' %}" class="btn btn-secondary btn-hero" style="background:rgba(255,255,255,0.08);color:#fff;border:1.5px solid rgba(255,255,255,0.15)">Sign In</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="container">
+    <div class="stats-inner">
+      <div class="stat"><div class="stat-num">{{ total }}+</div><div class="stat-label">Active Listings</div></div>
+      <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Happy Reunions</div></div>
+      <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Community Help</div></div>
+      <div class="stat"><div class="stat-num">Free</div><div class="stat-label">Always</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FILTER BAR — server-side -->
+<div class="filter-bar">
+  <div class="container">
+    <form method="GET" style="display:contents">
+      <div class="filter-inner">
+        <span class="filter-label">Filter:</span>
+        <a href="?" class="filter-btn {% if not filter_type %}active-all{% endif %}">All Pets</a>
+        <a href="?type=LOST{% if query %}&q={{ query }}{% endif %}" class="filter-btn {% if filter_type == 'LOST' %}active-lost{% endif %}">🔴 Lost</a>
+        <a href="?type=FOUND{% if query %}&q={{ query }}{% endif %}" class="filter-btn {% if filter_type == 'FOUND' %}active-found{% endif %}">🟢 Found</a>
+        <div class="search-wrap">
+          {% if filter_type %}<input type="hidden" name="type" value="{{ filter_type }}">{% endif %}
+          <input type="text" name="q" class="search-input" placeholder="🔍  Search by name, breed, location…" value="{{ query }}">
+          <button type="submit" class="search-btn">Search</button>
+          {% if query %}<a href="?{% if filter_type %}type={{ filter_type }}{% endif %}" class="filter-btn" style="padding:7px 14px">✕</a>{% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PET LISTINGS -->
+<section class="pets-section">
+  <div class="container">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem">
+      <div>
+        <h2 class="section-title">
+          {% if query %}Results for "{{ query }}"
+          {% elif filter_type == 'LOST' %}Lost Pets
+          {% elif filter_type == 'FOUND' %}Found Pets
+          {% else %}Recent Listings{% endif %}
+        </h2>
+        <p class="section-sub" style="margin-bottom:0">
+          {{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }} — approved reports only
+        </p>
+      </div>
+      {% if user.is_authenticated %}
+        <a href="{% url 'create_request' %}" class="btn btn-primary">＋ Add Your Report</a>
+      {% endif %}
+    </div>
+
+    {% if page_obj %}
+      <div class="pets-grid" id="petsGrid">
+        {% for pet in page_obj %}
+        <div class="pet-card" data-type="{{ pet.request_type }}">
+          <div class="pet-card-img-wrap">
+            {% if pet.pet_image %}
+              <img src="{{ pet.pet_image.url }}" alt="{{ pet.pet_name }}" loading="lazy"/>
+            {% else %}
+              {% if pet.pet_type|lower == "dog" %}🐕{% elif pet.pet_type|lower == "cat" %}🐈{% elif pet.pet_type|lower == "bird" %}🦜{% elif pet.pet_type|lower == "rabbit" %}🐇{% else %}🐾{% endif %}
+            {% endif %}
+          </div>
+          <div class="pet-card-body">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span class="badge badge-{{ pet.request_type|lower }}">{{ pet.request_type }}</span>
+              <span style="font-size:0.78rem;color:var(--gray-light)">{{ pet.created_at|date:"d M Y" }}</span>
+            </div>
+            <div class="pet-card-title">{{ pet.pet_name }}</div>
+            <div class="pet-card-row">
+              <span>🐾 {{ pet.pet_type }}</span>
+              {% if pet.breed %}<span style="color:var(--border)">·</span><span>{{ pet.breed }}</span>{% endif %}
+            </div>
+            <div class="pet-card-row"><span>🎨 {{ pet.color }}</span></div>
+            <div class="pet-card-row"><span>📍 {{ pet.location }}</span></div>
+            {% if pet.description %}
+              <p class="pet-card-description">{{ pet.description }}</p>
+            {% endif %}
+            <div class="contact-chip">📞 {{ pet.contact_number }}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- PAGINATION -->
+      {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&type={{ filter_type }}&q={{ query }}" class="pg-btn">← Prev</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="pg-btn current">{{ num }}</span>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}&type={{ filter_type }}&q={{ query }}" class="pg-btn">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&type={{ filter_type }}&q={{ query }}" class="pg-btn">Next →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    {% else %}
+      <div class="empty-state">
+        <div class="emoji">🐾</div>
+        <h3>{% if query %}No results for "{{ query }}"{% else %}No listings yet{% endif %}</h3>
+        <p style="margin-bottom:1.5rem">{% if query %}Try different keywords or clear the search.{% else %}Be the first to help a pet find their way home.{% endif %}</p>
+        {% if user.is_authenticated %}
+          <a href="{% url 'create_request' %}" class="btn btn-primary">＋ Create First Report</a>
+        {% else %}
+          <a href="{% url 'register' %}" class="btn btn-primary">Join & Help Today</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="hiw">
+  <div class="container">
+    <h2 class="hiw-title">How PetRescue Works</h2>
+    <p class="hiw-sub">Simple steps to help reunite pets with their families</p>
+    <div class="hiw-grid">
+      <div class="hiw-card"><div class="hiw-icon">📝</div><div class="hiw-step">1</div><h4>Create an Account</h4><p>Register for free in seconds — just your username, email, and password.</p></div>
+      <div class="hiw-card"><div class="hiw-icon">📸</div><div class="hiw-step">2</div><h4>Report a Pet</h4><p>Submit details about a lost or found pet — photo, location, description, and contact info.</p></div>
+      <div class="hiw-card"><div class="hiw-icon">🛡️</div><div class="hiw-step">3</div><h4>Admin Review</h4><p>Our admins review and accept or reject reports so only legitimate listings are shown.</p></div>
+      <div class="hiw-card"><div class="hiw-icon">🏠</div><div class="hiw-step">4</div><h4>Happy Reunion</h4><p>Pet owners browse listings, find their furry friend, and get in touch to bring them home!</p></div>
+    </div>
+  </div>
+</section>
+{% endblock %}

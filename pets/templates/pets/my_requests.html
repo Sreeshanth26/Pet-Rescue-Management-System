@@ -1,0 +1,148 @@
+{% extends "pets/base.html" %}
+{% block title %}My Reports — PetRescue{% endblock %}
+
+{% block extra_head %}
+<style>
+  .myrequests-section{padding:3rem 0 5rem}
+  .top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:2rem}
+  .top-bar h2{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700}
+
+  .status-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap}
+  .status-pending{background:#fef3c7;color:#92400e}
+  .status-accepted{background:#d1fae5;color:#065f46}
+  .status-rejected{background:#fee2e2;color:#991b1b}
+
+  .pet-row{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;display:flex;align-items:flex-start;gap:1.25rem;transition:box-shadow 0.2s;margin-bottom:12px}
+  .pet-row:hover{box-shadow:var(--shadow-md)}
+  .pet-row-img{width:72px;height:72px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:2rem}
+  .pet-row-img img{width:100%;height:100%;object-fit:cover}
+  .pet-row-body{flex:1;min-width:0}
+  .pet-row-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:4px}
+  .pet-row-meta{display:flex;flex-wrap:wrap;gap:8px;font-size:0.83rem;color:var(--gray-mid)}
+  .meta-chip{display:flex;align-items:center;gap:3px}
+  .pet-row-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+
+  .act-btn{padding:5px 13px;border-radius:8px;font-size:0.79rem;font-weight:600;border:none;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:3px;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+  .act-edit{background:var(--cream);color:var(--gray-dark);border:1.5px solid var(--border)}
+  .act-edit:hover{background:var(--border)}
+  .act-delete{background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5}
+  .act-delete:hover{background:#fca5a5}
+  .act-row{display:flex;gap:6px;flex-wrap:wrap}
+
+  .admin-note{margin-top:8px;padding:8px 12px;background:#fffbeb;border-radius:9px;border:1px solid #fde68a;font-size:0.82rem;color:#92400e;line-height:1.5}
+
+  .empty-state{text-align:center;padding:5rem 2rem;color:var(--gray-mid)}
+  .empty-icon{font-size:5rem;margin-bottom:1rem}
+  .empty-state h3{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gray-dark);margin-bottom:0.5rem}
+
+  .stats-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:2rem}
+  .summary-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:center;box-shadow:var(--shadow-sm)}
+  .summary-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900}
+  .summary-label{font-size:0.8rem;color:var(--gray-mid);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-top:2px}
+
+  @media(max-width:600px){.pet-row{flex-direction:column;align-items:flex-start}.pet-row-right{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>📋 My Reports</h1>
+    <p>Track and manage all the pet reports you've submitted</p>
+  </div>
+</div>
+
+<div class="myrequests-section">
+  <div class="container">
+
+    <!-- SUMMARY STATS -->
+    <div class="stats-summary">
+      <div class="summary-card">
+        <div class="summary-num" style="color:var(--amber)">{{ counts.total }}</div>
+        <div class="summary-label">Total Reports</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" style="color:#92400e">{{ counts.pending }}</div>
+        <div class="summary-label">Pending</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" style="color:#065f46">{{ counts.accepted }}</div>
+        <div class="summary-label">Accepted</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" style="color:#991b1b">{{ counts.rejected }}</div>
+        <div class="summary-label">Rejected</div>
+      </div>
+    </div>
+
+    <div class="top-bar">
+      <h2>Your Submissions</h2>
+      <a href="{% url 'create_request' %}" class="btn btn-primary">＋ New Report</a>
+    </div>
+
+    {% if pets %}
+      <div>
+        {% for pet in pets %}
+        <div class="pet-row">
+          <div class="pet-row-img">
+            {% if pet.pet_image %}
+              <img src="{{ pet.pet_image.url }}" alt="{{ pet.pet_name }}"/>
+            {% else %}
+              {% if pet.pet_type|lower == "dog" %}🐕{% elif pet.pet_type|lower == "cat" %}🐈{% elif pet.pet_type|lower == "bird" %}🦜{% else %}🐾{% endif %}
+            {% endif %}
+          </div>
+          <div class="pet-row-body">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+              <span class="badge badge-{{ pet.request_type|lower }}">{{ pet.request_type }}</span>
+              <div class="pet-row-title">{{ pet.pet_name }}</div>
+            </div>
+            <div class="pet-row-meta">
+              <span class="meta-chip">🐾 {{ pet.pet_type }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</span>
+              <span class="meta-chip">🎨 {{ pet.color }}</span>
+              <span class="meta-chip">📍 {{ pet.location }}</span>
+              <span class="meta-chip">📞 {{ pet.contact_number }}</span>
+              <span class="meta-chip">🗓 {{ pet.created_at|date:"d M Y" }}</span>
+            </div>
+            {% if pet.description %}
+              <p style="font-size:0.84rem;color:var(--gray-mid);margin-top:6px;line-height:1.5">{{ pet.description|truncatechars:120 }}</p>
+            {% endif %}
+            {% if pet.admin_note %}
+              <div class="admin-note">💬 <strong>Admin note:</strong> {{ pet.admin_note }}</div>
+            {% endif %}
+          </div>
+          <div class="pet-row-right">
+            {% if pet.status == "ACCEPTED" %}
+              <span class="status-pill status-accepted">✅ Accepted</span>
+            {% elif pet.status == "REJECTED" %}
+              <span class="status-pill status-rejected">❌ Rejected</span>
+            {% else %}
+              <span class="status-pill status-pending">⏳ Pending Review</span>
+            {% endif %}
+
+            {% if pet.status == "PENDING" %}
+            <div class="act-row">
+              <a href="{% url 'edit_request' pet.pk %}" class="act-btn act-edit">✏ Edit</a>
+              <form method="POST" action="{% url 'delete_request' pet.pk %}" style="display:inline"
+                    onsubmit="return confirm('Delete this report permanently?')">
+                {% csrf_token %}
+                <button type="submit" class="act-btn act-delete">🗑 Delete</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🐾</div>
+        <h3>No reports yet</h3>
+        <p style="margin-bottom:1.5rem">You haven't submitted any pet reports. Help the community by reporting a lost or found pet!</p>
+        <a href="{% url 'create_request' %}" class="btn btn-primary">＋ Create Your First Report</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

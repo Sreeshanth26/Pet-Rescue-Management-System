@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}PetRescue — Reuniting Paws with Families{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fdf6ee;
+      --warm-white: #fffaf4;
+      --amber: #e8810a;
+      --amber-light: #f5a623;
+      --amber-dark: #b86209;
+      --charcoal: #1c1a18;
+      --gray-dark: #3d3a35;
+      --gray-mid: #7a746c;
+      --gray-light: #c8bfb2;
+      --border: #e8dfd4;
+      --card-bg: #ffffff;
+      --lost-red: #d64545;
+      --found-green: #2e8b57;
+      --shadow-sm: 0 2px 8px rgba(28,26,24,0.08);
+      --shadow-md: 0 8px 32px rgba(28,26,24,0.12);
+      --shadow-lg: 0 20px 60px rgba(28,26,24,0.18);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--charcoal);min-height:100vh;display:flex;flex-direction:column}
+
+    /* NAVBAR */
+    .navbar{position:sticky;top:0;z-index:100;background:rgba(255,250,244,0.95);border-bottom:1px solid var(--border);backdrop-filter:blur(12px);padding:0 2rem;height:68px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm)}
+    .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .nav-brand-icon{width:40px;height:40px;background:var(--amber);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 4px 12px rgba(232,129,10,0.35);transition:transform 0.2s}
+    .nav-brand:hover .nav-brand-icon{transform:scale(1.08) rotate(-5deg)}
+    .nav-brand-text{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--charcoal);letter-spacing:-0.02em}
+    .nav-brand-text span{color:var(--amber)}
+    .nav-links{display:flex;align-items:center;gap:4px;list-style:none}
+    .nav-links a{text-decoration:none;color:var(--gray-dark);font-size:0.9rem;font-weight:500;padding:8px 14px;border-radius:8px;transition:all 0.2s}
+    .nav-links a:hover{background:var(--cream);color:var(--amber)}
+    .nav-btn{background:var(--amber)!important;color:#fff!important;padding:8px 18px!important;border-radius:8px!important;font-weight:600!important;box-shadow:0 3px 10px rgba(232,129,10,0.3);transition:transform 0.15s,box-shadow 0.15s,background 0.15s!important}
+    .nav-btn:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(232,129,10,0.4)!important;background:var(--amber-dark)!important}
+    .nav-btn-outline{background:transparent!important;color:var(--gray-dark)!important;border:1.5px solid var(--border)!important;box-shadow:none!important}
+    .nav-btn-outline:hover{border-color:var(--amber)!important;color:var(--amber)!important;background:transparent!important}
+
+    /* FLASH */
+    .messages-wrap{max-width:960px;margin:1.5rem auto 0;padding:0 1.5rem;display:flex;flex-direction:column;gap:8px}
+    .alert{padding:12px 18px;border-radius:10px;font-size:0.9rem;font-weight:500;border-left:4px solid;animation:slideDown 0.3s ease}
+    .alert-success{background:#ecfdf5;border-color:var(--found-green);color:#1a5c3a}
+    .alert-error,.alert-danger{background:#fef2f2;border-color:var(--lost-red);color:#7f1d1d}
+    .alert-info{background:#eff6ff;border-color:#3b82f6;color:#1e3a8a}
+    .alert-warning{background:#fffbeb;border-color:var(--amber);color:#92400e}
+    @keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+    main{flex:1}
+
+    /* FOOTER */
+    footer{background:var(--charcoal);color:var(--gray-light);text-align:center;padding:2rem;font-size:0.85rem}
+    footer strong{color:var(--amber);font-family:'Playfair Display',serif}
+
+    /* UTILITIES */
+    .container{max-width:1140px;margin:0 auto;padding:0 1.5rem}
+    .badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+    .badge-lost{background:#fee2e2;color:var(--lost-red)}
+    .badge-found{background:#dcfce7;color:var(--found-green)}
+    .badge-pending{background:#fef3c7;color:#92400e}
+    .badge-approved{background:#d1fae5;color:#065f46}
+
+    /* FORM */
+    .form-card{background:var(--card-bg);border-radius:20px;padding:2.5rem;box-shadow:var(--shadow-md);border:1px solid var(--border)}
+    .form-group{margin-bottom:1.25rem}
+    .form-label{display:block;margin-bottom:6px;font-size:0.875rem;font-weight:600;color:var(--gray-dark)}
+    .form-control{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;background:var(--warm-white);color:var(--charcoal);transition:border-color 0.2s,box-shadow 0.2s;outline:none;appearance:auto}
+    .form-control:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(232,129,10,0.12)}
+    textarea.form-control{resize:vertical;min-height:100px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 24px;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:all 0.2s}
+    .btn-primary{background:var(--amber);color:#fff;box-shadow:0 4px 14px rgba(232,129,10,0.35)}
+    .btn-primary:hover{background:var(--amber-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,129,10,0.45)}
+    .btn-secondary{background:var(--cream);color:var(--gray-dark);border:1.5px solid var(--border)}
+    .btn-secondary:hover{background:var(--border);color:var(--charcoal)}
+    .btn-full{width:100%}
+    .btn-danger{background:#fee2e2;color:var(--lost-red);border:1.5px solid #fca5a5}
+    .btn-danger:hover{background:#fca5a5;color:#7f1d1d}
+
+    .errorlist{list-style:none;margin-top:6px}
+    .errorlist li{font-size:0.82rem;color:var(--lost-red);display:flex;align-items:center;gap:4px}
+    .errorlist li::before{content:"⚠ "}
+
+    /* PAGE HEADER */
+    .page-header{background:linear-gradient(135deg,var(--charcoal) 0%,#2d2a25 100%);color:#fff;padding:3.5rem 0 3rem;position:relative;overflow:hidden}
+    .page-header::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(232,129,10,0.18) 0%,transparent 65%)}
+    .page-header .container{position:relative}
+    .page-header h1{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:900;margin-bottom:0.5rem}
+    .page-header p{color:#b0a898;font-size:1rem}
+
+    /* PET GRID CARD */
+    .pet-card{background:var(--card-bg);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border);transition:transform 0.25s,box-shadow 0.25s}
+    .pet-card:hover{transform:translateY(-5px);box-shadow:var(--shadow-md)}
+    .pet-card-img-wrap{width:100%;height:200px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:4rem;overflow:hidden}
+    .pet-card-img-wrap img{width:100%;height:100%;object-fit:cover}
+    .pet-card-body{padding:1.25rem}
+    .pet-card-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;margin-bottom:8px}
+    .pet-card-row{display:flex;align-items:center;gap:6px;font-size:0.84rem;color:var(--gray-mid);margin-bottom:4px}
+    .pet-card-row span{display:flex;align-items:center;gap:3px}
+    .pet-card-description{font-size:0.87rem;color:var(--gray-mid);line-height:1.55;margin-top:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+    /* TABLE */
+    .data-table{width:100%;border-collapse:collapse;background:var(--card-bg);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border)}
+    .data-table thead tr{background:var(--charcoal);color:#fff}
+    .data-table th{padding:14px 16px;text-align:left;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+    .data-table td{padding:14px 16px;font-size:0.9rem;border-top:1px solid var(--border);vertical-align:middle}
+    .data-table tbody tr{transition:background 0.15s}
+    .data-table tbody tr:hover{background:var(--cream)}
+
+    @media(max-width:768px){
+      .navbar{padding:0 1rem}
+      .nav-links{gap:2px}
+      .nav-links a{padding:6px 10px;font-size:0.82rem}
+      .nav-brand-text{font-size:1.1rem}
+      .page-header h1{font-size:1.7rem}
+      .form-card{padding:1.5rem}
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{% url 'home' %}" class="nav-brand">
+      <div class="nav-brand-icon">🐾</div>
+      <span class="nav-brand-text">Pet<span>Rescue</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="{% url 'home' %}">Browse</a></li>
+    <li><a href="{% url 'pet_search' %}">🔍 Search</a></li>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'create_request' %}">＋ Report</a></li>
+        <li><a href="{% url 'my_requests' %}">My Reports</a></li>
+        {% if user.is_staff %}<li><a href="{% url 'admin_dashboard' %}">🛡️ Admin Panel</a></li>{% endif %}
+        <li><a href="{% url 'logout' %}" class="nav-btn nav-btn-outline">Logout</a></li>
+      {% else %}
+        <li><a href="{% url 'login' %}">Sign In</a></li>
+        <li><a href="{% url 'register' %}" class="nav-btn">Join Free</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  <main>
+    {% if messages %}
+      <div class="messages-wrap">
+        {% for message in messages %}<div class="alert alert-{{ message.tags }}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>🐾 <strong>PetRescue</strong> &mdash; Reuniting families, one paw at a time &middot; &copy; 2025</p>
+  </footer>
+<script>
+  // Load unread notification count
+  {% if user.is_authenticated %}
+  fetch('/api/notifications/')
+    .then(r => r.json())
+    .then(data => {
+      const unread = data.results ? data.results.filter(n => !n.is_read).length : 0;
+      const badge = document.getElementById('notif-badge');
+      if (badge) { badge.textContent = unread > 0 ? unread : ''; badge.style.display = unread > 0 ? 'flex' : 'none'; }
+    }).catch(() => {});
+  {% endif %}
+</script>
+</body>
+</html>
